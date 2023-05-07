@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.sql import func
 
-engine = create_engine("mysql+pymysql://root:Matrix759*#@127.0.0.1:3306/t1", 
+engine = create_engine("mysql+pymysql://root:passwd@127.0.0.1:3306/t1", 
                        encoding='utf-8',
                        echo=True, 
                        max_overflow=5)# 
