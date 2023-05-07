@@ -110,7 +110,7 @@ if __name__=='__main__':
     # self.self_payload={"data":{"mainSearchPcConditionForm":{"city":"050090","dq":"050090","currentPage":0,"pageSize":40,"key":"爬虫","suggestTag":"","workYearCode":"1$3","salary":"10$20","jobKind":"2","compScale":"080","compKind":"","eduLevel":"040"}}}
     bcy_job_need1=Job_Request(username='bcy',usermail='saintbcy@163.com',city='050090',dq='050090',pubTime='',currentPage=0,pageSize=40,Key='爬虫',suggestTag='',workYearCode='1$3',compId='',compName='',compTag='',industry='',salary='10$20',jobKind='2',compScale='070',compKind='',compStage='',eduLevel='040')
 
-    zanzan_job_need1=Job_Request(username='赞赞',usermail='769355987@qq.com',city='070020',dq='070020',pubTime='',currentPage=0,pageSize=40,Key='会计',suggestTag='',workYearCode='1$3',compId='',compName='',compTag='',industry='',salary='10$20',jobKind='2',compScale='080',compKind='',compStage='',eduLevel='040')
+    
     
     session.add(bcy_job_need1)
     session.add(zanzan_job_need1)

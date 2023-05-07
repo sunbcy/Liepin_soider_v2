@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from Connect_MySQL import Job_Request,Job_Recommendation
 
-engine = create_engine("mysql+pymysql://root:Matrix759*#@127.0.0.1:3306/t1", 
+engine = create_engine("mysql+pymysql://root:passwd@127.0.0.1:3306/t1", 
                        encoding='utf-8',
                     #    echo=True,
                        max_overflow=5)
