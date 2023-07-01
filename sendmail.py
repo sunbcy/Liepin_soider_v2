@@ -3,10 +3,11 @@ import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
-from email.header import Header  # ,header
+from email.header import Header
 from email.utils import formataddr
 import traceback
 import os
+from conf import admin_mail, qq_mail_authorization, test_recv_mail
 
 
 def content(cnt=''):
@@ -27,9 +28,9 @@ class MailSender:
     def __init__(self) -> None:
         # 第三方SMTP服务
         self.mail_host = 'smtp.qq.com'  # 邮件服务器地址
-        self.mail_user = ''  # 发件人邮箱
-        self.mail_pass = ''  # 填写邮箱授权码
-        self.receivers = ['']
+        self.mail_user = admin_mail  # 发件人邮箱
+        self.mail_pass = qq_mail_authorization  # 填写邮箱授权码
+        self.receivers = [test_recv_mail]
 
     def send_test(self, cnt='这是一个测试'):
         message = MIMEText(content(cnt), 'html', 'utf-8')  # style可以为plain(文本)/html(网页)
@@ -103,8 +104,8 @@ class MailSender:
 
 if __name__ == '__main__':
     mailsender = MailSender()
-    mailsender.sendmail(sender_name='',
-                        to=[''],
+    mailsender.sendmail(sender_name='MailBot',
+                        to=[test_recv_mail],
                         cc=[''],
                         title='test',
                         cnt=content('hhh'),
