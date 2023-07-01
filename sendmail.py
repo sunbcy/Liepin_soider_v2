@@ -10,7 +10,7 @@ import os
 
 
 def content(cnt=''):
-    head = """
+    head = """ 
     <head>
     <title>MacBot1 Report Of {today}</title>
     </head>""".format(today=time.strftime('%Y%m%d'))
@@ -29,7 +29,7 @@ class MailSender:
         self.mail_host = 'smtp.qq.com'  # 邮件服务器地址
         self.mail_user = ''  # 发件人邮箱
         self.mail_pass = ''  # 填写邮箱授权码
-        self.receivers = ['saintbcy@163.com']
+        self.receivers = ['']
 
     def send_test(self, cnt='这是一个测试'):
         message = MIMEText(content(cnt), 'html', 'utf-8')  # style可以为plain(文本)/html(网页)
@@ -46,8 +46,17 @@ class MailSender:
             print('邮件发送成功!')
         except smtplib.SMTPException:
             print('Oops~邮件发送失败~~')
-            
+
     def sendmail(self, sender_name, to, cc, title, cnt, attachments=None):
+        """
+
+        :param attachments: 附件列表
+        :param title: 邮件主题
+        :param cnt: 邮件内容
+        :param cc: 抄送人列表
+        :param to: 接收人列表
+        :type sender_name: 发件人名称
+        """
         if attachments is None:
             attachments = []
         sender_user = self.mail_user
@@ -60,7 +69,7 @@ class MailSender:
             m.attach(html_part)
             m['Subject'] = title
             if sender_name and sender_name != '':
-                m['from'] = Header(sender_name, 'UTF-8').encode()+'<%s>' % sender_user
+                m['from'] = Header(sender_name, 'UTF-8').encode() + '<%s>' % sender_user
             else:
                 m['from'] = sender_user
             m['To'] = '.'.join(to)
@@ -83,22 +92,21 @@ class MailSender:
                 print("smtp端口号未知")
                 return
             svr.login(sender_user, sender_password)
-            svr.sendmail(sender_user, to+cc, m.as_string())
+            svr.sendmail(sender_user, to + cc, m.as_string())
             svr.quit()
         except Exception:
             traceback.print_exc()
             print('[ERROR]发送邮件失败')
             return
-        print('邮件已发送\n收件人{%s}\n抄送人{%s}\n' % (",".join(to), ','.join(cc)))
-        
+        print('邮件已发送\n邮件主题: %s\n收件人{%s}\n抄送人{%s}\n' % (title, ",".join(to), ','.join(cc)))
+
 
 if __name__ == '__main__':
     mailsender = MailSender()
-    # mailsender.send_test('发送邮件时间:{}'.format(time.strftime('%Y%m%d %H:%M:%S')))
-    
-    mailsender.sendmail('MacBot', 
-                        ['saintbcy@163.com'], 
-                        [], 
-                        'test', 
-                        content('hhh'),
-                        attachments=[i for i in os.listdir(os.path.dirname(__name__)) if not i.endswith('.py')])
+    mailsender.sendmail(sender_name='',
+                        to=[''],
+                        cc=[''],
+                        title='test',
+                        cnt=content('hhh'),
+                        attachments=[i for i in os.listdir(os.path.abspath(''))
+                                     if not i.endswith('.py') and os.path.isfile(i)])

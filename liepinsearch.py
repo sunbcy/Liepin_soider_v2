@@ -1,5 +1,6 @@
 import requests
-import os,time
+import os
+import time
 import json
 from pprint import pprint
 from lxml import etree
@@ -8,7 +9,7 @@ from sendmail import MailSender
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from Connect_MySQL import Job_Request,Job_Recommendation
+from Connect_MySQL import Job_Request, Job_Recommendation
 
 engine = create_engine("mysql+pymysql://root:passwd@127.0.0.1:3306/t1", 
                        encoding='utf-8',
@@ -16,10 +17,11 @@ engine = create_engine("mysql+pymysql://root:passwd@127.0.0.1:3306/t1",
                        max_overflow=5)
 Base = declarative_base()
 
-class liepin_suggestList(object):
-    """docstring for liepin_suggestList"""
+
+class LiepinSuggestList(object):
+    """docstring for LiepinSuggestList"""
     def __init__(self):
-        super(liepin_suggestList, self).__init__()
+        super(LiepinSuggestList, self).__init__()
         self.url='http://apic.liepin.com/api/com.liepin.searchfront4c.pc-search-suggest-list?keyword=中药'#%E5%B5%8C%E5%85%A5%E5%BC%8F
         self.headers={
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.101 Safari/537.36',
@@ -150,10 +152,12 @@ class liepin_searchjob(object):
                     send_flag=1
                     Bot_1.send_text(ALL_JOB_STR_QIYE_WECHAT)
                     if usermail=='saintbcy@163.com':#抄送给自己
-                        mailsender.sendMail('MacBot',[usermail],[],'【个人职位推荐x3】',mailsender.content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
+                        mailsender.sendMail('MacBot', [usermail], [],'【个人职位推荐x3】',
+                                            content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                     else:
                         # mailsender.sendMail('MacBot',['626813534@qq.com'],[],'{user}【个人职位推荐x3】'.format(user=username),mailsender.content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
-                        mailsender.sendMail('MacBot',[usermail],['626813534@qq.com'],'{user}【个人职位推荐x3】'.format(user=username),mailsender.content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
+                        mailsender.sendMail('MacBot', [usermail], ['626813534@qq.com'],'{user}【个人职位推荐x3】'.format(user=username),
+                                            content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                     # session.close()
                     break
                 for i in jobCardList:
@@ -230,10 +234,12 @@ class liepin_searchjob(object):
                             send_flag=1
                             Bot_1.send_text(ALL_JOB_STR_QIYE_WECHAT)
                             if unpushed_usermail=='saintbcy@163.com':#抄送给自己
-                                mailsender.sendMail('MacBot',[unpushed_usermail],[],'【个人职位推荐x3】',mailsender.content(ALL_JOB_STR_MAIL))
+                                mailsender.sendMail('MacBot', [unpushed_usermail], [],'【个人职位推荐x3】',
+                                                    content(ALL_JOB_STR_MAIL))
                             else:
                                 # mailsender.sendMail('MacBot',['626813534@qq.com'],[],'{user}【个人职位推荐x3】'.format(user=unpushed_username),mailsender.content(ALL_JOB_STR_MAIL))
-                                mailsender.sendMail('MacBot',[unpushed_usermail],['626813534@qq.com'],'{user}【个人职位推荐x3】'.format(user=unpushed_username),mailsender.content(ALL_JOB_STR_MAIL))
+                                mailsender.sendMail('MacBot', [unpushed_usermail], ['626813534@qq.com'],'{user}【个人职位推荐x3】'.format(user=unpushed_username),
+                                                    content(ALL_JOB_STR_MAIL))
                             # quit()
                             break
                         else:
