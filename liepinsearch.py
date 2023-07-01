@@ -6,17 +6,9 @@ from pprint import pprint
 from lxml import etree
 from QiYeWeChat_Bot import QiyeWeChatBot
 from sendmail import MailSender, content
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+
 from Connect_MySQL import Job_Request, Job_Recommendation
 from conf import admin_mail, test_recv_mail
-
-engine = create_engine("mysql+pymysql://root:passwd@127.0.0.1:3306/t1",
-                       encoding='utf-8',
-                       #    echo=True,
-                       max_overflow=5)
-Base = declarative_base()
 
 
 class LiepinSuggestList:
@@ -81,7 +73,7 @@ def get_job_detail_infos(job_link):
         if not company_intro:
             company_intro = ''
         print(f"company_intro为{company_intro}")
-    # print(company_intro)#公司简介
+    # print(company_intro)  # 公司简介
     return job_tags, job_intro_content
 
 
@@ -111,13 +103,13 @@ class LiepinSearchjobs(object):
                                           'workYearCode': '0'}
         self.data = {'mainSearchPcConditionForm': '%s' % self.mainSearchPcConditionForm}
         self.form_data = {'data': self.data}
-        self.payload = {"data": {"mainSearchPcConditionForm": {"city": "410",
-                                                               "dq": "410",
-                                                               "currentPage": 0,
-                                                               "pageSize": 40,
-                                                               "key": "亚马逊运营",
-                                                               "suggestTag": "",
-                                                               "workYearCode": "1$3"}}}
+        # self.payload = {"data": {"mainSearchPcConditionForm": {"city": "410",
+        #                                                        "dq": "410",
+        #                                                        "currentPage": 0,
+        #                                                        "pageSize": 40,
+        #                                                        "key": "亚马逊运营",
+        #                                                        "suggestTag": "",
+        #                                                        "workYearCode": "1$3"}}}
 
         self.self_payload = {"data": {"mainSearchPcConditionForm": {"city": "050090",
                                                                     "dq": "050090",
@@ -386,10 +378,8 @@ if __name__ == '__main__':
     # 初始化通知机器人
     Bot_1 = QiyeWeChatBot()
     mailsender = MailSender()
-    # 创建mysql操作对象
-    Session = sessionmaker(bind=engine, expire_on_commit=False)
-    session = Session()
+
 
     liepin_searchjob = LiepinSearchjobs()
     liepin_searchjob.download_liepin_searchjob()
-    session.close()
+
