@@ -1,14 +1,14 @@
-import requests
-import os
-import time
 import json
-from pprint import pprint
-from lxml import etree
-from QiYeWeChat_Bot import QiyeWeChatBot
-from sendmail import MailSender, content
+import time
 
-from Connect_MySQL import Job_Request, Job_Recommendation
+import requests
+from lxml import etree
+
+from QiYeWeChat_Bot import QiyeWeChatBot
 from conf import admin_mail, test_recv_mail
+from db import session
+from db.models import JobRequest, JobRecommendation
+from sendmail import MailSender, content
 
 
 class LiepinSuggestList:
@@ -41,9 +41,12 @@ class LiepinSuggestList:
 
 def get_job_detail_infos(job_link):
     print('【访问】 {job_link}'.format(job_link=job_link))
-    r = requests.get(job_link, headers={
+    try:
+        r = requests.get(job_link, headers={
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
         (KHTML, like Gecko) Chrome/100.0.4896.60 Safari/537.36'})
+    except requests.exceptions.SSLError:
+        return None, None
     r.encoding = r.apparent_encoding
     html = etree.HTML(r.text)
     try:
@@ -81,7 +84,7 @@ class LiepinSearchjobs(object):
     """docstring for liepin_searchjob"""
 
     def __init__(self):
-        super(liepin_searchjob, self).__init__()
+        super(LiepinSearchjobs, self).__init__()
         self.url = 'https://apic.liepin.com/api/com.liepin.searchfront4c.pc-search-job'  # %E5%B5%8C%E5%85%A5%E5%BC%8F
         self.X_Fscp_Std_Info = {"client_id": "40108"}
         self.headers = {
@@ -153,40 +156,39 @@ class LiepinSearchjobs(object):
 
     def download_liepin_searchjob(self):
         person_count = 0
-        job_requests = session.query(Job_Request).all()
+        job_requests = session.query(JobRequest).all()
         for job_request in job_requests:
             ALL_JOB_STR_QIYE_WECHAT = ''
             ALL_JOB_STR_MAIL = ''
             JOB_NUM = 2
             JOB_COUNT = 0
             send_flag = 0
-            user_id, username, usermail, city, dq, pubTime, currentPage, pageSize, Key, suggestTag, workYearCode, compId, compName, compTag, industry, salary, jobKind, compScale, compKind, compStage, eduLevel, ctime, mtime = job_request.id, job_request.username, job_request.usermail, job_request.city, job_request.dq, job_request.pubTime, job_request.currentPage, job_request.pageSize, job_request.Key, job_request.suggestTag, job_request.workYearCode, job_request.compId, job_request.compName, job_request.compTag, job_request.industry, job_request.salary, job_request.jobKind, job_request.compScale, job_request.compKind, job_request.compStage, job_request.eduLevel, job_request.ctime, job_request.mtime
-            # print(username,usermail,city,dq,pubTime,currentPage,pageSize,Key,suggestTag,workYearCode,compId,compName,compTag,industry,salary,jobKind,compScale,compKind,compStage,eduLevel,ctime,mtime)
 
-            while currentPage < pageSize:
-                self.self_payload = {"data": {"mainSearchPcConditionForm": {"city": city,
-                                                                            "dq": dq,
-                                                                            "pubTime": pubTime,
-                                                                            "currentPage": currentPage,
-                                                                            "pageSize": pageSize,
-                                                                            "key": Key,
-                                                                            "suggestTag": suggestTag,
-                                                                            "workYearCode": workYearCode,
-                                                                            "compId": compId,
-                                                                            "compName": compName,
-                                                                            "compTag": compTag,
-                                                                            "industry": industry,
-                                                                            "salary": salary,
-                                                                            "jobKind": jobKind,
-                                                                            "compScale": compScale,
-                                                                            "compKind": compKind,
-                                                                            "compStage": compStage,
-                                                                            "eduLevel": eduLevel}}}
+            while job_request.currentPage < job_request.pageSize:
+                self.self_payload = {"data": {"mainSearchPcConditionForm": {"city": job_request.city,
+                                                                            "dq": job_request.dq,
+                                                                            "pubTime": job_request.pubTime,
+                                                                            "currentPage": job_request.currentPage,
+                                                                            "pageSize": job_request.pageSize,
+                                                                            "key": job_request.Key,
+                                                                            "suggestTag": job_request.suggestTag,
+                                                                            "workYearCode": job_request.workYearCode,
+                                                                            "compId": job_request.compId,
+                                                                            "compName": job_request.compName,
+                                                                            "compTag": job_request.compTag,
+                                                                            "industry": job_request.industry,
+                                                                            "salary": job_request.salary,
+                                                                            "jobKind": job_request.jobKind,
+                                                                            "compScale": job_request.compScale,
+                                                                            "compKind": job_request.compKind,
+                                                                            "compStage": job_request.compStage,
+                                                                            "eduLevel": job_request.eduLevel}}}
 
                 r = requests.post(self.url,
                                   headers=self.headers,
                                   json=self.self_payload,
-                                  timeout=3)  # ,proxies=self.proxy)#,verify=False
+                                  timeout=3,
+                                  proxies=self.proxy)  # ,proxies=self.proxy)#,verify=False
                 time.sleep(5)
                 print("<{status_code}>".format(status_code=r.status_code))
                 result_ret = json.loads(r.text)
@@ -197,13 +199,13 @@ class LiepinSearchjobs(object):
                     JOB_COUNT += 1
                     send_flag = 1
                     Bot_1.send_text(ALL_JOB_STR_QIYE_WECHAT)
-                    if usermail == test_recv_mail:  # 发给管理员
-                        mailsender.sendmail('MacBot', [usermail], [], '【个人职位推荐x3】',
+                    if job_request.usermail == test_recv_mail:  # 发给管理员
+                        mailsender.sendmail('MacBot', [job_request.usermail], [], '【个人职位推荐x3】',
                                             content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                     else:  # 抄送给管理员
                         # mailsender.sendMail('MacBot',[admin_mail],[],'{user}【个人职位推荐x3】'.format(user=username),mailsender.content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
-                        mailsender.sendmail('MacBot', [usermail], [admin_mail],
-                                            '{user}【个人职位推荐x3】'.format(user=username),
+                        mailsender.sendmail('MacBot', [job_request.usermail], [admin_mail],
+                                            '{user}【个人职位推荐x3】'.format(user=job_request.username),
                                             content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                     # session.close()
                     break
@@ -232,7 +234,7 @@ class LiepinSearchjobs(object):
                     compName = comp['compName']
                     compScale = comp['compScale'] if 'compScale' in comp else '无'
                     compStage = comp['compStage'] if 'compStage' in comp else '无'
-                    compLogo = comp['compLogo '] if 'compLogo' in comp else '无'
+                    compLogo = comp['compLogo'] if 'compLogo' in comp else '无'
                     compIndustry = comp['compIndustry'] if 'compIndustry' in comp else '无'
                     comp_link = comp['link']
 
@@ -250,7 +252,7 @@ class LiepinSearchjobs(object):
                     job_tags, job_intro_content = get_job_detail_infos(job_link)
                     if job_intro_content:
                         job_origin = '猎聘'
-                        job_recommendation = Job_Recommendation(dataInfo=dataInfo,
+                        job_recommendation = JobRecommendation(dataInfo=dataInfo,
                                                                 dataParams=dataParams,
                                                                 job_title=job_title,
                                                                 job_salary=job_salary,
@@ -281,8 +283,8 @@ class LiepinSearchjobs(object):
                                                                 jobKind=jobKind,
                                                                 job_refreshTime=job_refreshTime,
                                                                 job_origin=job_origin,
-                                                                username=username,
-                                                                usermail=usermail)
+                                                                username=job_request.username,
+                                                                usermail=job_request.usermail)
                         session.add(job_recommendation)
                     else:
                         print('!!!!!估计被猎聘安全中心发现了!!!!!!quit~~')
@@ -294,12 +296,12 @@ class LiepinSearchjobs(object):
                         session.rollback()
 
                     # 数据库中取出此人未推送的数据项
-                    unpushed_jobs = session.query(Job_Recommendation).\
-                        filter(Job_Recommendation.push_flag == 'false', Job_Recommendation.username == username).first()
+                    unpushed_jobs = session.query(JobRecommendation).\
+                        filter(JobRecommendation.push_flag == 'false', JobRecommendation.username == job_request.username).first()
                     if unpushed_jobs:
                         push_id = unpushed_jobs.id
-                        session.query(Job_Recommendation).filter_by(id=push_id).update(
-                            {Job_Recommendation.push_flag: 'true'})
+                        session.query(JobRecommendation).filter_by(id=push_id).update(
+                            {JobRecommendation.push_flag: 'true'})
                         session.commit()
 
                         unpushed_job_title, unpushed_job_salary, unpushed_recruiterName, unpushed_recruiterTitle, unpushed_compName, unpushed_compScale, unpushed_compStage, unpushed_compIndustry, unpushed_jobKind, unpushed_job_refreshTime, unpushed_job_dq, unpushed_job_requireWorkYears, unpushed_job_requireEduLevel, unpushed_job_labels, unpushed_job_intro_content, unpushed_username, unpushed_usermail = unpushed_jobs.job_title, unpushed_jobs.job_salary, unpushed_jobs.recruiterName, unpushed_jobs.recruiterTitle, unpushed_jobs.compName, unpushed_jobs.compScale, unpushed_jobs.compStage, unpushed_jobs.compIndustry, unpushed_jobs.jobKind, unpushed_jobs.job_refreshTime, unpushed_jobs.job_dq, unpushed_jobs.job_requireWorkYears, unpushed_jobs.job_requireEduLevel, unpushed_jobs.job_labels, unpushed_jobs.job_intro_content, unpushed_jobs.username, unpushed_jobs.usermail
@@ -362,9 +364,9 @@ class LiepinSearchjobs(object):
                     else:  # 如果数据表中的推送完了,则会把当前payload请求中的职位都入库
                         pass
 
-                currentPage += 1
-                session.query(Job_Request).filter(Job_Request.id == user_id).update(
-                    {Job_Request.currentPage: currentPage})  # 更新当前页
+                job_request.currentPage += 1
+                session.query(JobRequest).filter(JobRequest.id == job_request.user_id).update(
+                    {JobRequest.currentPage: job_request.currentPage})  # 更新当前页
                 session.commit()
                 # break
                 if send_flag:
@@ -382,4 +384,3 @@ if __name__ == '__main__':
 
     liepin_searchjob = LiepinSearchjobs()
     liepin_searchjob.download_liepin_searchjob()
-
