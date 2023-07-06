@@ -9,6 +9,7 @@ from conf import admin_mail, test_recv_mail
 from db import session
 from db.models import JobRequest, JobRecommendation
 from sendmail import MailSender, content
+from get_proxy import get_proxy
 
 
 class LiepinSuggestList:
@@ -149,10 +150,7 @@ class LiepinSearchjobs(object):
         compStage ""-无 "01"-天使轮 "02"-A轮 "03"-B轮 "04"-C轮 "05"-D轮及以上 "06"-已上市 "07"-战略融资 "08"-融资未公开 "99"-其他
         eduLevel ""-无 "010"-博士 "020"-MBA/EMBA "030"-硕士 "040"-本科 "050"-大专 "060"-中专/中技 "080"-高中 "090"-初中及以下 
           """
-        self.proxy = {
-            'http': 'http://127.0.0.1:7890',
-            'https': 'http://127.0.0.1:7890'
-        }
+        self.proxy = get_proxy()
 
     def download_liepin_searchjob(self):
         person_count = 0
@@ -183,12 +181,18 @@ class LiepinSearchjobs(object):
                                                                             "compKind": job_request.compKind,
                                                                             "compStage": job_request.compStage,
                                                                             "eduLevel": job_request.eduLevel}}}
-
-                r = requests.post(self.url,
-                                  headers=self.headers,
-                                  json=self.self_payload,
-                                  timeout=3,
-                                  proxies=self.proxy)  # ,proxies=self.proxy)#,verify=False
+                while True:
+                    try:
+                        r = requests.post(self.url,
+                                          headers=self.headers,
+                                          json=self.self_payload,
+                                          timeout=10,
+                                          proxies=self.proxy,
+                                          verify=False)  # ,proxies=self.proxy)#,verify=False
+                        if r.status_code == 200:
+                            break
+                    except requests.exceptions.ProxyError:
+                        self.proxy = get_proxy()
                 time.sleep(5)
                 print("<{status_code}>".format(status_code=r.status_code))
                 result_ret = json.loads(r.text)
@@ -203,7 +207,6 @@ class LiepinSearchjobs(object):
                         mailsender.sendmail('MacBot', [job_request.usermail], [], '【个人职位推荐x3】',
                                             content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                     else:  # 抄送给管理员
-                        # mailsender.sendMail('MacBot',[admin_mail],[],'{user}【个人职位推荐x3】'.format(user=username),mailsender.content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
                         mailsender.sendmail('MacBot', [job_request.usermail], [admin_mail],
                                             '{user}【个人职位推荐x3】'.format(user=job_request.username),
                                             content(ALL_JOB_STR_MAIL if ALL_JOB_STR_MAIL else '未获取到更多职位!请修改求职条件'))
@@ -211,7 +214,7 @@ class LiepinSearchjobs(object):
                     break
                 for i in jobCardList:
                     JOB_STR = """"""
-                    dataInfo, job, recruiter, comp, dataParams = i['dataInfo'], i['job'], i['recruiter'], i['comp'], i['dataParams']
+                    dataInfo, job, recruiter, comp, dataParams = ['dataInfo'], i['job'], i['recruiter'], i['comp'], i['dataParams']
 
                     job_title = job['title']
                     job_salary = job['salary']
@@ -253,38 +256,38 @@ class LiepinSearchjobs(object):
                     if job_intro_content:
                         job_origin = '猎聘'
                         job_recommendation = JobRecommendation(dataInfo=dataInfo,
-                                                                dataParams=dataParams,
-                                                                job_title=job_title,
-                                                                job_salary=job_salary,
-                                                                job_dq=job_dq,
-                                                                job_requireWorkYears=job_requireWorkYears,
-                                                                job_requireEduLevel=job_requireEduLevel,
-                                                                job_labels=job_labels,
-                                                                job_link=job_link,
-                                                                jobId=jobId,
-                                                                topJob=str(topJob),
-                                                                job_advViewFlag=str(job_advViewFlag),
-                                                                job_dataPromId=job_dataPromId,
-                                                                recruiterName=recruiterName,
-                                                                recruiterTitle=recruiterTitle,
-                                                                recruiter_imId=recruiter_imId,
-                                                                recruiter_imUserType=recruiter_imUserType,
-                                                                recruiter_chatted=str(recruiter_chatted),
-                                                                recruiterId=recruiterId,
-                                                                recruiterPhoto=recruiterPhoto,
-                                                                compId=compId,
-                                                                compName=compName,
-                                                                compScale=compScale,
-                                                                compStage=compStage,
-                                                                compLogo=compLogo,
-                                                                compIndustry=compIndustry,
-                                                                comp_link=comp_link,
-                                                                job_intro_content=job_intro_content,
-                                                                jobKind=jobKind,
-                                                                job_refreshTime=job_refreshTime,
-                                                                job_origin=job_origin,
-                                                                username=job_request.username,
-                                                                usermail=job_request.usermail)
+                                                               dataParams=dataParams,
+                                                               job_title=job_title,
+                                                               job_salary=job_salary,
+                                                               job_dq=job_dq,
+                                                               job_requireWorkYears=job_requireWorkYears,
+                                                               job_requireEduLevel=job_requireEduLevel,
+                                                               job_labels=job_labels,
+                                                               job_link=job_link,
+                                                               jobId=jobId,
+                                                               topJob=str(topJob),
+                                                               job_advViewFlag=str(job_advViewFlag),
+                                                               job_dataPromId=job_dataPromId,
+                                                               recruiterName=recruiterName,
+                                                               recruiterTitle=recruiterTitle,
+                                                               recruiter_imId=recruiter_imId,
+                                                               recruiter_imUserType=recruiter_imUserType,
+                                                               recruiter_chatted=str(recruiter_chatted),
+                                                               recruiterId=recruiterId,
+                                                               recruiterPhoto=recruiterPhoto,
+                                                               compId=compId,
+                                                               compName=compName,
+                                                               compScale=compScale,
+                                                               compStage=compStage,
+                                                               compLogo=compLogo,
+                                                               compIndustry=compIndustry,
+                                                               comp_link=comp_link,
+                                                               job_intro_content=job_intro_content,
+                                                               jobKind=jobKind,
+                                                               job_refreshTime=job_refreshTime,
+                                                               job_origin=job_origin,
+                                                               username=job_request.username,
+                                                               usermail=job_request.usermail)
                         session.add(job_recommendation)
                     else:
                         print('!!!!!估计被猎聘安全中心发现了!!!!!!quit~~')
@@ -380,7 +383,6 @@ if __name__ == '__main__':
     # 初始化通知机器人
     Bot_1 = QiyeWeChatBot()
     mailsender = MailSender()
-
 
     liepin_searchjob = LiepinSearchjobs()
     liepin_searchjob.download_liepin_searchjob()

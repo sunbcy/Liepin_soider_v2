@@ -1,17 +1,16 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DECIMAL, Enum, Date, DateTime, Time, Text, ForeignKey, UniqueConstraint, Index
-from sqlalchemy.orm import declarative_base
+from sqlalchemy import (MetaData, Table, Column, Integer, String, Float, Boolean, DECIMAL, Enum, Date,
+                        DateTime, Time, Text, ForeignKey, UniqueConstraint, Index)
+from sqlalchemy.orm import declarative_base, relationship, backref
 from sqlalchemy.sql import func
-Base = declarative_base()
+
 
 
 # 建工作需求单
 class JobRequest(Base):
     __tablename__ = 'job_request'
-    id = Column(Integer,
-                primary_key=True)  # ，autoincrement=True , index=True, nullable=False , unique=True  , default=18
-    username = Column(String(32))
+    id = Column(Integer(), primary_key=True)  # autoincrement=True, index=True, nullable=False, unique=True, default=18
+    username = Column(String(32), index=True)
     usermail = Column(String(50))
-    # userqywx=Column(String(32))
     city = Column(String(32))
     dq = Column(String(32))
     pubTime = Column(String(50))
